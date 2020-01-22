@@ -4,6 +4,7 @@ import json
 import urllib
 import argparse
 import requests
+import subprocess
 from bs4 import BeautifulSoup
 
 
@@ -27,12 +28,17 @@ def product_spider(product_id):
     
     for idx, element in enumerate(soup.find_all('li', attrs={'class': 'mdCMN09Li'})):
         data = json.loads(element['data-preview'])
-        img_url = data.get('animationUrl') or data['staticUrl']
+        img_type =  'animation' if 'animation' in data['type'] else 'static'
+        img_url = data['animationUrl'] if img_type == 'animation' else data['staticUrl']
         img_url = img_url.split(';compress=true')[0]
-        img_type = img_url.split('.')[-1]
+        img_format = img_url.split('.')[-1]
 
-        urllib.request.urlretrieve(img_url, '{}/{:03}.{}'.format(save_path, idx, img_type)) 
-        print('Downloading sticker: ', img_url)
+        filename = '{}/{:03}.{}'.format(save_path, idx, img_format)
+        print('Downloading sticker: ', filename)
+        urllib.request.urlretrieve(img_url, filename) 
+        if img_type == 'animation':
+            subprocess.run(['./apng2gif.exe', filename])
+            os.remove(filename)
 
 
 def author_spider(author_id):
