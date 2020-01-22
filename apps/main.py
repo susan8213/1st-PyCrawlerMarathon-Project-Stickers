@@ -1,5 +1,6 @@
 import os
 import re
+import enum
 import json
 import urllib
 import argparse
@@ -7,6 +8,11 @@ import requests
 import subprocess
 from bs4 import BeautifulSoup
 
+
+class StickerURL(enum.Enum):
+    STATIC = 'staticUrl'
+    ANIMATION = 'animationUrl'
+    POPUP = 'popupUrl'
 
 def convert2filename(name):
     return name.replace('\\', '').replace('/', '') \
@@ -37,15 +43,16 @@ def product_spider(product_id):
 
     for idx, element in enumerate(soup.find_all('li', attrs={'class': 'mdCMN09Li'})):
         data = json.loads(element['data-preview'])
-        img_type =  'animation' if 'animation' in data['type'] else 'static'
-        img_url = data['animationUrl'] if img_type == 'animation' else data['staticUrl']
+        img_type = data['type']
+        img_type =  StickerURL.ANIMATION if ('animation' in img_type) else StickerURL.POPUP if ('popup' in img_type) else StickerURL.STATIC
+        img_url = data[img_type.value]
         img_url = img_url.split(';compress=true')[0]
         img_format = img_url.split('.')[-1]
 
         filename = '{}/{:03}.{}'.format(save_path, idx, img_format)
         print('Downloading sticker: ', filename)
         urllib.request.urlretrieve(img_url, filename) 
-        if img_type == 'animation':
+        if img_type != StickerURL.STATIC:
             subprocess.run(['./apng2gif.exe', filename])
             os.remove(filename)
 
