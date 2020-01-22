@@ -20,6 +20,14 @@ def convert2filename(name):
         .replace( '"', '').replace('?', '').replace('|', '') \
         .replace(':', '').replace('\'', '')
 
+def download(url, filename):
+    try:
+        urllib.request.urlretrieve(url, filename)
+    except urllib.ContentTooShortError:
+        print('Network conditions is not good. Sleep 10s then reloading...')
+        sleep(10)
+        download(url, filename)
+
 def crawler_main(args):
 
     if args.type == 'product':
@@ -51,7 +59,7 @@ def product_spider(product_id):
 
         filename = '{}/{:03}.{}'.format(save_path, idx, img_format)
         print('Downloading sticker: ', filename)
-        urllib.request.urlretrieve(img_url, filename) 
+        download(img_url, filename)
         if img_type != StickerURL.STATIC:
             subprocess.run(['./apng2gif.exe', filename])
             os.remove(filename)
