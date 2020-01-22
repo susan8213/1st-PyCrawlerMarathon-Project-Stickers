@@ -8,6 +8,12 @@ import subprocess
 from bs4 import BeautifulSoup
 
 
+def convert2filename(name):
+    return name.replace('\\', '').replace('/', '') \
+        .replace('*', '').replace('>', '').replace('<', '') \
+        .replace( '"', '').replace('?', '').replace('|', '') \
+        .replace(':', '').replace('\'', '')
+
 def crawler_main(args):
 
     if args.type == 'product':
@@ -18,14 +24,17 @@ def crawler_main(args):
         raise AttributeError('Your request is not supported: ', args)
 
 def product_spider(product_id):
-    save_path = './img/{}'.format(product_id)
-    if not os.path.isdir(save_path):
-        os.makedirs(save_path)
 
     url = 'https://store.line.me/stickershop/product/{}'.format(product_id)
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
+    product_title = soup.find('p', attrs={'class': 'mdCMN38Item01Ttl'}).text
+    product_title = convert2filename(product_title)
+    save_path = './img/{}'.format(product_title)
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
+
     for idx, element in enumerate(soup.find_all('li', attrs={'class': 'mdCMN09Li'})):
         data = json.loads(element['data-preview'])
         img_type =  'animation' if 'animation' in data['type'] else 'static'
@@ -49,7 +58,7 @@ def author_spider(author_id):
     for element in soup.find_all('li', attrs={'class': 'mdCMN02Li'}):
         product_id = re.search(r'\/product/(\d+)\/', element.find('a')['href']).group(1)
         sticker_title = element.find('p', attrs={'class': 'mdCMN05Ttl'}).text
-        print('Sticker Product: ', product_id, sticker_title)
+        print('Sticker Product: ', product_id)
         product_spider(product_id)
     pass
 
