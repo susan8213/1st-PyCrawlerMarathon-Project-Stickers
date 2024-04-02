@@ -3,7 +3,7 @@
 This repository is for demonstration of how I've learnt in Web Crawling.
 
 
-## Project Introduction & 
+## Project Introduction
 
 ONLY FOR ACADEMY PURPOSE. Crawling LINE stickers from LINE official website.
 
